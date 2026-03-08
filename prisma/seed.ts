@@ -1,6 +1,12 @@
-import { PrismaClient } from '@prisma/client'
+import "dotenv/config"
+import { PrismaClient } from "@prisma/client"
+import { PrismaPg } from "@prisma/adapter-pg"
 
-const prisma = new PrismaClient()
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL!,
+})
+
+const prisma = new PrismaClient({ adapter })
 
 async function main() {
   console.log('Start seeding...')
@@ -21,15 +27,13 @@ async function main() {
       location: "1 Grantham Street, Hamilton",
       lat: -37.7901,
       lng: 175.2848,
-      category: "Tech",
+      category: "Culture",
       imageUrl: "https://images.unsplash.com/photo-1518998053901-5348d3961a04?auto=format&fit=crop&w=800&q=80"
     }
   ]
 
   for (const event of events) {
-    const createdEvent = await prisma.event.create({
-      data: event,
-    })
+    const createdEvent = await prisma.event.create({ data: event })
     console.log(`Created event with id: ${createdEvent.id}`)
   }
 
