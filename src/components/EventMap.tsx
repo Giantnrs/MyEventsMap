@@ -1,6 +1,6 @@
 "use client"
-
-export default function EventMap({ events }) {
+import { Event } from "@prisma/client"
+export default function EventMap({ events }: { events: Event[] }) {
   return (
     <div>
       Map showing {events.length} events

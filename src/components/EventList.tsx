@@ -1,4 +1,5 @@
-export default function EventList({ events }) {
+import { Event } from "@prisma/client"
+export default function EventList({ events }: { events: Event[] }) {
   return (
     <div className="grid gap-4">
       {events.map((event) => (
