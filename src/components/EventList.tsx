@@ -1,4 +1,5 @@
-import { Event } from "@prisma/client"
+import { Event  } from "@prisma/client"
+
 export default function EventList({ events }: { events: Event[] }) {
   return (
     <div className="grid gap-4">

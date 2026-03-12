@@ -15,7 +15,7 @@ export default function Navbar({ view, setView }: NavbarProps) {
           <span className="text-white font-bold text-xl">E</span>
         </div>
         <span className="font-bold text-xl tracking-tight text-gray-900 hidden sm:block">
-          EventMap
+          MyEventsMap
         </span>
       </div>
 
