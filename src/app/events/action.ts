@@ -89,11 +89,12 @@ export async function updateEvent(id: string, data: {
       }
     })
     revalidatePath("/events")
-    redirect(`/events/${id}`)
+    
   } catch (error) {
     console.error(error)
     throw new Error('Failed to update event')
   }
+  redirect(`/events/${id}`)
 }
 
 export async function deleteEvent(id: string) {
@@ -102,9 +103,10 @@ export async function deleteEvent(id: string) {
       where: { id }
     })
     revalidatePath("/events")
-    redirect("/events")
+
   } catch (error) {
     console.error(error)
     throw new Error('Failed to delete event')
   }
+  redirect("/events")
 }
