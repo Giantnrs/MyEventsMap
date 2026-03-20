@@ -13,7 +13,7 @@ export default function HomeClient({ events }: { events:Event[] }) {
   const [view, setView] = useState<"list" | "map">("list")
 
   return (
-    <main className="pt-24">
+    <main>
       <Navbar view={view} setView={setView} />
 
       {view === "list" ? (
