@@ -5,14 +5,7 @@ import { Event } from '@prisma/client'
 import { useState } from 'react'
 
 const CATEGORIES = [
-  'OUTDOOR',
-  'MUSIC',
-  'SPORTS',
-  'FOOD',
-  'TECH',
-  'ARTS',
-  'CHARITY',
-  'OTHER',
+  'OUTDOOR', 'MUSIC', 'SPORTS', 'FOOD', 'TECH', 'ARTS', 'CHARITY', 'OTHER',
 ]
 
 const formatDateTime = (date: Date) => {
@@ -53,125 +46,127 @@ export default function EditEventForm({ event }: { event: Event }) {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+
       {error && (
-        <p style={{ color: 'red' }}>{error}</p>
+        <div className="px-4 py-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+          {error}
+        </div>
       )}
 
       <div>
-        <label>Title</label><br />
+        <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
         <input
           name="title"
           type="text"
           required
           defaultValue={event.title}
-          style={{ width: '100%' }}
+          className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
-      <br />
 
       <div>
-        <label>Description</label><br />
+        <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
         <textarea
           name="description"
           required
           rows={4}
           defaultValue={event.description}
-          style={{ width: '100%' }}
+          className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
         />
       </div>
-      <br />
 
       <div>
-        <label>Location</label><br />
+        <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
         <input
           name="location"
           type="text"
           required
           defaultValue={event.location}
-          style={{ width: '100%' }}
+          className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
-      <br />
 
-      <div>
-        <label>Latitude</label><br />
-        <input
-          name="lat"
-          type="number"
-          step="any"
-          required
-          defaultValue={event.lat}
-          style={{ width: '100%' }}
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
+          <input
+            name="lat"
+            type="number"
+            step="any"
+            required
+            defaultValue={event.lat}
+            className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
+          <input
+            name="lng"
+            type="number"
+            step="any"
+            required
+            defaultValue={event.lng}
+            className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
       </div>
-      <br />
 
       <div>
-        <label>Longitude</label><br />
-        <input
-          name="lng"
-          type="number"
-          step="any"
-          required
-          defaultValue={event.lng}
-          style={{ width: '100%' }}
-        />
-      </div>
-      <br />
-
-      <div>
-        <label>Category</label><br />
+        <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
         <select
           name="category"
           required
           defaultValue={event.category}
-          style={{ width: '100%' }}
+          className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
         >
           {CATEGORIES.map(cat => (
             <option key={cat} value={cat}>{cat}</option>
           ))}
         </select>
       </div>
-      <br />
 
-      <div>
-        <label>Start Time</label><br />
-        <input
-          name="startTime"
-          type="datetime-local"
-          required
-          defaultValue={formatDateTime(event.startTime)}
-          style={{ width: '100%' }}
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+          <input
+            name="startTime"
+            type="datetime-local"
+            required
+            defaultValue={formatDateTime(event.startTime)}
+            className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">End Time <span className="text-gray-400">(optional)</span></label>
+          <input
+            name="endTime"
+            type="datetime-local"
+            defaultValue={event.endTime ? formatDateTime(event.endTime) : ''}
+            className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
       </div>
-      <br />
 
       <div>
-        <label>End Time (optional)</label><br />
-        <input
-          name="endTime"
-          type="datetime-local"
-          defaultValue={event.endTime ? formatDateTime(event.endTime) : ''}
-          style={{ width: '100%' }}
-        />
-      </div>
-      <br />
-
-      <div>
-        <label>Image URL (optional)</label><br />
+        <label className="block text-sm font-medium text-gray-700 mb-1">Image URL <span className="text-gray-400">(optional)</span></label>
         <input
           name="imageUrl"
           type="url"
           defaultValue={event.imageUrl || ''}
-          style={{ width: '100%' }}
+          placeholder="https://..."
+          className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
-      <br />
 
-      <button type="submit" disabled={loading}>
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full bg-blue-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+      >
         {loading ? 'Saving...' : 'Save Changes'}
       </button>
+
     </form>
   )
 }

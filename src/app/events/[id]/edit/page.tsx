@@ -15,8 +15,9 @@ export default async function EditEventPage({
   }
 
   return (
-    <main style={{ maxWidth: 600, margin: '0 auto', padding: 32 }}>
-      <h1>Edit Event</h1>
+    <main className="max-w-2xl mx-auto px-6 py-10">
+      <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit Event</h1>
+      <p className="text-gray-500 mb-8">Update the details below.</p>
       <EditEventForm event={event} />
     </main>
   )
