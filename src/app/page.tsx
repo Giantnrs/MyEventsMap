@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import HomeClient from "@/components/HomeClient"
+export const revalidate = 0  
 
 export default async function Page() {
   const events = await prisma.event.findMany()
