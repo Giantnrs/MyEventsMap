@@ -6,7 +6,6 @@ import { useSession, signIn, signOut } from 'next-auth/react'
 
 export default function Navbar() {
   const { data: session } = useSession()
-
   return (
     <nav className="fixed top-0 w-full bg-white border-b border-gray-200 z-50 h-16 flex items-center px-6 justify-between shadow-sm">
 
@@ -45,7 +44,7 @@ export default function Navbar() {
               </div>
             )}
             <button
-              onClick={() => signOut()}
+              onClick={() => signOut({ callbackUrl: '/' })}
               className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
             >
               <LogOut size={16} />
@@ -54,7 +53,7 @@ export default function Navbar() {
           </div>
         ) : (
           <button
-            onClick={() => signIn('google')}
+            onClick={() => signIn('google', {}, { prompt: 'select_account' })}
             className="flex items-center gap-2 border border-gray-300 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
           >
             <LogIn size={16} />
