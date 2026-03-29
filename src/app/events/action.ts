@@ -57,8 +57,8 @@ export async function createEvent(data: {
     }
   })
 
-  revalidatePath("/events")
-  redirect("/events/")
+  revalidatePath("/")
+  redirect("/")
 }
 
 export async function updateEvent(id: string, data: {
@@ -94,7 +94,7 @@ export async function updateEvent(id: string, data: {
     }
   })
 
-  revalidatePath("/events")
+  revalidatePath("/")
   redirect(`/events/${id}`)
 }
 
@@ -108,6 +108,6 @@ export async function deleteEvent(id: string) {
 
   await prisma.event.delete({ where: { id } })
 
-  revalidatePath("/events")
-  redirect("/events")
+  revalidatePath("/")
+  redirect("/")
 }
