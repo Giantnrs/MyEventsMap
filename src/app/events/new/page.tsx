@@ -2,6 +2,7 @@
 
 import { createEvent } from "@/app/events/action"
 import { useState } from 'react'
+import LocationPicker from '@/components/LocationPicker'
 
 const CATEGORIES = [
   'OUTDOOR', 'MUSIC', 'SPORTS', 'FOOD', 'TECH', 'ARTS', 'CHARITY', 'OTHER',
@@ -74,41 +75,8 @@ export default function NewEventPage() {
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-          <input
-            name="location"
-            type="text"
-            required
-            placeholder="e.g. Auckland CBD"
-            className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
-            <input
-              name="lat"
-              type="number"
-              step="any"
-              required
-              defaultValue="-37.7928"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
-            <input
-              name="lng"
-              type="number"
-              step="any"
-              required
-              defaultValue="175.2783"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-        </div>
+        {/* Location with autocomplete + auto coords */}
+        <LocationPicker />
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>

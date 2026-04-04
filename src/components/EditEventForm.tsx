@@ -3,6 +3,7 @@
 import { updateEvent } from '@/app/events/action'
 import { Event } from '@prisma/client'
 import { useState } from 'react'
+import LocationPicker from '@/components/LocationPicker'
 
 const CATEGORIES = [
   'OUTDOOR', 'MUSIC', 'SPORTS', 'FOOD', 'TECH', 'ARTS', 'CHARITY', 'OTHER',
@@ -76,41 +77,12 @@ export default function EditEventForm({ event }: { event: Event }) {
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-        <input
-          name="location"
-          type="text"
-          required
-          defaultValue={event.location}
-          className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
-          <input
-            name="lat"
-            type="number"
-            step="any"
-            required
-            defaultValue={event.lat}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
-          <input
-            name="lng"
-            type="number"
-            step="any"
-            required
-            defaultValue={event.lng}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      </div>
+      {/* Location with autocomplete — pre-filled with existing values */}
+      <LocationPicker
+        defaultLocation={event.location}
+        defaultLat={event.lat}
+        defaultLng={event.lng}
+      />
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>

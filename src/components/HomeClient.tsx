@@ -1,8 +1,9 @@
 "use client"
 import { Event } from "@prisma/client"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { List, Map as MapIcon } from "lucide-react"
 import EventList from "@/components/EventList"
+import FilterBar, { Filters, DEFAULT_FILTERS } from "@/components/FilterBar"
 import dynamic from "next/dynamic"
 
 const EventMap = dynamic(() => import("@/components/EventMap"), {
@@ -12,6 +13,43 @@ const EventMap = dynamic(() => import("@/components/EventMap"), {
 
 export default function HomeClient({ events }: { events: Event[] }) {
   const [view, setView] = useState<"list" | "map">("list")
+  const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS)
+
+  const filtered = useMemo(() => {
+    const now = new Date()
+    const search = filters.search.toLowerCase()
+
+    return events.filter(event => {
+      // Text search — title or location
+      if (search && !event.title.toLowerCase().includes(search) && !event.location.toLowerCase().includes(search)) {
+        return false
+      }
+
+      // Category
+      if (filters.category && event.category !== filters.category) {
+        return false
+      }
+
+      // Date from
+      if (filters.dateFrom && event.startTime < new Date(filters.dateFrom)) {
+        return false
+      }
+
+      // Date to — include the full "to" day by going to end of that day
+      if (filters.dateTo) {
+        const end = new Date(filters.dateTo)
+        end.setHours(23, 59, 59, 999)
+        if (event.startTime > end) return false
+      }
+
+      // Upcoming only
+      if (filters.upcomingOnly && event.startTime < now) {
+        return false
+      }
+
+      return true
+    })
+  }, [events, filters])
 
   return (
     <main>
@@ -43,10 +81,18 @@ export default function HomeClient({ events }: { events: Event[] }) {
         </div>
       </div>
 
+      {/* Filter bar — always visible */}
+      <FilterBar filters={filters} onChange={setFilters} />
+
+      {/* Result count */}
+      <p className="text-center text-xs text-gray-400 mb-1">
+        {filtered.length} event{filtered.length !== 1 ? 's' : ''} found
+      </p>
+
       {view === "list" ? (
-        <EventList events={events} />
+        <EventList events={filtered} />
       ) : (
-        <EventMap events={events} />
+        <EventMap events={filtered} />
       )}
     </main>
   )
