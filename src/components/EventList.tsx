@@ -1,8 +1,15 @@
 import { Event } from "@prisma/client"
 import Link from "next/link"
+import HeartButton from "@/components/HeartButton"
 
-export default function EventList({ events }: { events: Event[] }) {
-  
+export default function EventList({
+  events,
+  savedIds = [],
+}: {
+  events: Event[]
+  savedIds?: string[]
+}) {
+
   if (events.length === 0) {
     return (
       <div className="text-center py-20">
@@ -21,7 +28,7 @@ export default function EventList({ events }: { events: Event[] }) {
       {events.map((event) => (
         <Link key={event.id} href={`/events/${event.id}`}>
           <div className="border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
-            
+
             {/* Image */}
             {event.imageUrl ? (
               <img
@@ -37,11 +44,17 @@ export default function EventList({ events }: { events: Event[] }) {
 
             {/* Content */}
             <div className="p-4">
-              
-              {/* Category Badge */}
-              <span className="text-xs font-medium bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                {event.category}
-              </span>
+
+              {/* Category badge + heart */}
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                  {event.category}
+                </span>
+                <HeartButton
+                  eventId={event.id}
+                  initialSaved={savedIds.includes(event.id)}
+                />
+              </div>
 
               {/* Title */}
               <h2 className="text-lg font-semibold mt-2 text-gray-900">

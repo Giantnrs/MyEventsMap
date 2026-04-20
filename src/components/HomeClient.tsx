@@ -11,7 +11,13 @@ const EventMap = dynamic(() => import("@/components/EventMap"), {
   loading: () => <p className="p-6 text-gray-500">Loading map...</p>,
 })
 
-export default function HomeClient({ events }: { events: Event[] }) {
+export default function HomeClient({
+  events,
+  savedIds,
+}: {
+  events: Event[]
+  savedIds: string[]
+}) {
   const [view, setView] = useState<"list" | "map">("list")
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS)
 
@@ -20,33 +26,17 @@ export default function HomeClient({ events }: { events: Event[] }) {
     const search = filters.search.toLowerCase()
 
     return events.filter(event => {
-      // Text search — title or location
       if (search && !event.title.toLowerCase().includes(search) && !event.location.toLowerCase().includes(search)) {
         return false
       }
-
-      // Category
-      if (filters.category && event.category !== filters.category) {
-        return false
-      }
-
-      // Date from
-      if (filters.dateFrom && event.startTime < new Date(filters.dateFrom)) {
-        return false
-      }
-
-      // Date to — include the full "to" day by going to end of that day
+      if (filters.category && event.category !== filters.category) return false
+      if (filters.dateFrom && event.startTime < new Date(filters.dateFrom)) return false
       if (filters.dateTo) {
         const end = new Date(filters.dateTo)
         end.setHours(23, 59, 59, 999)
         if (event.startTime > end) return false
       }
-
-      // Upcoming only
-      if (filters.upcomingOnly && event.startTime < now) {
-        return false
-      }
-
+      if (filters.upcomingOnly && event.startTime < now) return false
       return true
     })
   }, [events, filters])
@@ -59,9 +49,7 @@ export default function HomeClient({ events }: { events: Event[] }) {
           <button
             onClick={() => setView('list')}
             className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
-              view === 'list'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
+              view === 'list' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             <List size={18} />
@@ -70,9 +58,7 @@ export default function HomeClient({ events }: { events: Event[] }) {
           <button
             onClick={() => setView('map')}
             className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
-              view === 'map'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
+              view === 'map' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             <MapIcon size={18} />
@@ -81,16 +67,14 @@ export default function HomeClient({ events }: { events: Event[] }) {
         </div>
       </div>
 
-      {/* Filter bar — always visible */}
       <FilterBar filters={filters} onChange={setFilters} />
 
-      {/* Result count */}
       <p className="text-center text-xs text-gray-400 mb-1">
         {filtered.length} event{filtered.length !== 1 ? 's' : ''} found
       </p>
 
       {view === "list" ? (
-        <EventList events={filtered} />
+        <EventList events={filtered} savedIds={savedIds} />
       ) : (
         <EventMap events={filtered} />
       )}

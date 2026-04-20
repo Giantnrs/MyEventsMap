@@ -1,9 +1,13 @@
 import { prisma } from "@/lib/prisma"
 import HomeClient from "@/components/HomeClient"
-export const revalidate = 0  
+import { getUserSavedIds } from "@/app/saved/actions"
+export const revalidate = 0
 
 export default async function Page() {
-  const events = await prisma.event.findMany()
+  const [events, savedIds] = await Promise.all([
+    prisma.event.findMany(),
+    getUserSavedIds(),
+  ])
 
-  return <HomeClient events={events} />
+  return <HomeClient events={events} savedIds={savedIds} />
 }
