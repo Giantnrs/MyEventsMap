@@ -62,6 +62,8 @@ model Event {
   endTime     DateTime?
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
+  donationGoal  Float?
+  donations     Donation[]
 
   // Relations
   authorId    String
@@ -117,4 +119,15 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Donation {
+  id              String   @id @default(cuid())
+  eventId         String
+  event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId          String?
+  amount          Int      // in cents
+  stripeSessionId String   @unique
+  status          String   @default("pending") // pending | paid
+  createdAt       DateTime @default(now())
 }
