@@ -3,6 +3,7 @@
 import { createEvent } from "@/app/events/action"
 import { useState } from 'react'
 import LocationPicker from '@/components/LocationPicker'
+import ImageUploader from '@/components/ImageUploader'
 
 const CATEGORIES = [
   'OUTDOOR', 'MUSIC', 'SPORTS', 'FOOD', 'TECH', 'ARTS', 'CHARITY', 'OTHER',
@@ -11,6 +12,7 @@ const CATEGORIES = [
 export default function NewEventPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [imageUrl, setImageUrl] = useState(event?.imageUrl || '')
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -113,12 +115,7 @@ export default function NewEventPage() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Image URL <span className="text-gray-400">(optional)</span></label>
-          <input
-            name="imageUrl"
-            type="url"
-            placeholder="https://..."
-            className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+<ImageUploader value={imageUrl} onChange={setImageUrl} />
         </div>
 
         <button
