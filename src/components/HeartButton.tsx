@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Heart } from 'lucide-react'
+import { Bookmark } from 'lucide-react'
 import { toggleSave } from '@/app/saved/actions'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
@@ -44,10 +44,10 @@ export default function HeartButton({
       title={saved ? 'Remove from saved' : 'Save event'}
       className="p-1.5 rounded-full hover:bg-gray-100 transition-colors disabled:opacity-50"
     >
-      <Heart
+      <Bookmark
         size={18}
         className={`transition-colors ${
-          saved ? 'fill-red-500 stroke-red-500' : 'stroke-gray-400 hover:stroke-red-400'
+          saved ? 'fill-blue-600 stroke-blue-600' : 'stroke-gray-400 hover:stroke-blue-600'
         }`}
       />
     </button>

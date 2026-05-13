@@ -1,6 +1,7 @@
 "use client"
 import { Event } from "@prisma/client"
 import { useEffect, useRef } from "react"
+import { useRouter } from "next/navigation"
 import L from "leaflet"
 
 const defaultIcon = L.icon({
@@ -13,11 +14,11 @@ const defaultIcon = L.icon({
 export default function EventMap({ events }: { events: Event[] }) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<L.Map | null>(null)
+  const router = useRouter()
 
   useEffect(() => {
     if (!mapRef.current) return
 
-    // Only initialize the map once
     if (!mapInstanceRef.current) {
       const defaultCenter: [number, number] = [51.505, -0.09]
       const map = L.map(mapRef.current).setView(defaultCenter, 13)
@@ -32,7 +33,7 @@ export default function EventMap({ events }: { events: Event[] }) {
       let userCircle: L.Circle | null = null
 
       const LocateControl = L.Control.extend({
-        options: { position: "topleft" }, // <-- Move to top left
+        options: { position: "topleft" },
         onAdd() {
           const btn = L.DomUtil.create("button", "leaflet-locate-btn")
           btn.title = "Go to my location"
@@ -52,7 +53,7 @@ export default function EventMap({ events }: { events: Event[] }) {
             background: white; border: 2px solid rgba(0,0,0,0.2);
             border-radius: 4px; cursor: pointer; color: #444;
             box-shadow: none; padding: 0;
-            margin-top: 48px; /* Add margin to move below zoom controls */
+            margin-top: 48px;
           `
 
           btn.onmouseenter = () => { btn.style.color = "#2563eb" }
@@ -115,33 +116,81 @@ export default function EventMap({ events }: { events: Event[] }) {
 
     const map = mapInstanceRef.current
 
-    // Remove existing markers
+    // Remove existing event markers (keep tile layer + user location markers)
     map.eachLayer(layer => {
-      if (layer instanceof L.Marker || layer instanceof L.CircleMarker || layer instanceof L.Circle) {
+      if (layer instanceof L.Marker) {
         map.removeLayer(layer)
       }
     })
 
-    // Add tile layer again if needed (skip if already present)
-    // Add event markers if there are any
     if (events.length > 0) {
-      const center: [number, number] = [events[0].lat, events[0].lng]
-      map.setView(center, 13)
+      map.setView([events[0].lat, events[0].lng], 13)
+
       events.forEach(event => {
-        L.marker([event.lat, event.lng], { icon: defaultIcon })
+        const startLabel = event.startTime.toLocaleDateString('en-NZ', {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+
+        // Hover tooltip (opens on mouseover, closes on mouseout)
+        const tooltip = L.tooltip({
+          permanent: false,
+          direction: 'top',
+          offset: [0, -42],
+          opacity: 1,
+          className: 'event-map-tooltip',
+        }).setContent(`
+          <div style="width:200px;box-sizing:border-box;">
+            <p style="font-weight:600;font-size:13px;margin:0 0 4px;color:#111;white-space:normal;word-break:break-word;line-height:1.3;">${event.title}</p>
+            <p style="font-size:11px;margin:0 0 2px;color:#555;white-space:normal;word-break:break-word;">📍 ${event.location}</p>
+            <p style="font-size:11px;margin:0;color:#555;">🕐 ${startLabel}</p>
+          </div>
+        `)
+
+        const marker = L.marker([event.lat, event.lng], { icon: defaultIcon })
           .addTo(map)
-          .bindPopup(`<strong>${event.title}</strong><br/>${event.description ?? ""}`)
+          .bindTooltip(tooltip)
+
+        // Click → navigate to event page
+        marker.on('click', () => {
+          router.push(`/events/${event.id}`)
+        })
+
+        // Cursor pointer on hover
+        marker.on('mouseover', () => {
+          const el = marker.getElement()
+          if (el) el.style.cursor = 'pointer'
+        })
       })
     }
-    // If events.length === 0, do not move the map
-
-    return () => {
-      // Clean up only on unmount
-      // Do not remove the map on every events change
-    }
-  }, [events])
+  }, [events, router])
 
   return (
-    <div ref={mapRef} style={{ height: "calc(100vh - 64px)", width: "100%" }} />
+    <>
+      <style>{`
+        .event-map-tooltip {
+          background: white;
+          border: 1px solid #e5e7eb;
+          border-radius: 10px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+          padding: 8px 12px;
+          width: 224px;
+          max-width: 224px;
+          white-space: normal;
+          overflow: hidden;
+          box-sizing: border-box;
+        }
+        .event-map-tooltip::before {
+          border-top-color: #e5e7eb !important;
+        }
+        .leaflet-tooltip-top.event-map-tooltip::before {
+          border-top-color: #e5e7eb !important;
+        }
+      `}</style>
+      <div ref={mapRef} style={{ height: "calc(100vh - 64px)", width: "100%" }} />
+    </>
   )
 }

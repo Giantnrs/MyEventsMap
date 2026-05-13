@@ -79,7 +79,7 @@ export default function FilterBar({ filters, onChange }: Props) {
         <div className="flex items-center gap-1.5">
           <label className="text-xs text-gray-500 whitespace-nowrap">From</label>
           <input
-            type="date"
+            type="datetime-local"
             value={filters.dateFrom}
             onChange={e => set({ dateFrom: e.target.value })}
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -90,7 +90,7 @@ export default function FilterBar({ filters, onChange }: Props) {
         <div className="flex items-center gap-1.5">
           <label className="text-xs text-gray-500 whitespace-nowrap">To</label>
           <input
-            type="date"
+            type="datetime-local"
             value={filters.dateTo}
             onChange={e => set({ dateTo: e.target.value })}
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"

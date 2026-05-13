@@ -5,6 +5,7 @@ import { getEventDonations } from '@/app/events/donate/actions'
 import { auth } from '@/lib/auth'
 import Link from 'next/link'
 import DonatePanel from '@/components/DonatePanel'
+import EventLocationMap from '@/components/EventLocationMap'
 
 export default async function EventDetailPage({
   params,
@@ -95,14 +96,30 @@ export default async function EventDetailPage({
         {event.description}
       </p>
 
-      {/* Donation panel — visible to everyone */}
+      {/* Location map */}
+      <div className="mt-8">
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+          Location
+        </h2>
+        <EventLocationMap lat={event.lat} lng={event.lng} label={event.location} />
+        <a
+          href={`https://www.google.com/maps/search/?api=1&query=${event.lat},${event.lng}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block mt-2 text-xs text-blue-500 hover:underline"
+        >
+          Open in Google Maps ↗
+        </a>
+      </div>
+
+      {/* Donation panel */}
       <DonatePanel
         eventId={id}
         raised={total}
         count={count}
       />
 
-      {/* Actions — only visible to owner */}
+      {/* Actions — owner only */}
       {isOwner && (
         <div className="flex gap-3 mt-10">
           <Link href={`/events/${id}/edit`}>
