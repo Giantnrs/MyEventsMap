@@ -12,7 +12,7 @@ const CATEGORIES = [
 export default function NewEventPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [imageUrl, setImageUrl] = useState(event?.imageUrl || '')
+  const [imageUrl, setImageUrl] = useState('')
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
