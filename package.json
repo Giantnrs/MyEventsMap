@@ -23,6 +23,7 @@
     "next-auth": "^5.0.0-beta.30",
     "next-cloudinary": "^6.17.5",
     "pg": "^8.20.0",
+    "react-easy-crop": "^5.5.7",
     "react-leaflet": "^5.0.0",
     "stripe": "^22.1.0"
   },
