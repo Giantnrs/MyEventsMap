@@ -1,7 +1,7 @@
 "use client"
 import { Event } from "@prisma/client"
 import { useState, useMemo } from "react"
-import { List, Map as MapIcon } from "lucide-react"
+import { List, Map as MapIcon, Search, X } from "lucide-react"
 import EventList from "@/components/EventList"
 import FilterBar, { Filters, DEFAULT_FILTERS } from "@/components/FilterBar"
 import dynamic from "next/dynamic"
@@ -20,6 +20,21 @@ export default function HomeClient({
 }) {
   const [view, setView] = useState<"list" | "map">("list")
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS)
+  const [searchOpen, setSearchOpen] = useState(false)
+
+  const isFiltering =
+    filters.search ||
+    filters.category ||
+    filters.dateFrom ||
+    filters.dateTo ||
+    filters.upcomingOnly
+
+  function handleToggleSearch() {
+    if (searchOpen && isFiltering) {
+      setFilters(DEFAULT_FILTERS)
+    }
+    setSearchOpen(prev => !prev)
+  }
 
   const filtered = useMemo(() => {
     const now = new Date()
@@ -43,8 +58,8 @@ export default function HomeClient({
 
   return (
     <main>
-      {/* View toggle */}
-      <div className="flex justify-center pt-6">
+      {/* View toggle + search button */}
+      <div className="flex justify-center items-center gap-2 pt-6">
         <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200">
           <button
             onClick={() => setView('list')}
@@ -65,11 +80,41 @@ export default function HomeClient({
             <span>Map</span>
           </button>
         </div>
+
+        {/* Search toggle button */}
+        <button
+          onClick={handleToggleSearch}
+          title={searchOpen ? 'Close search' : 'Search & filter'}
+          className={`flex items-center justify-center w-9 h-9 rounded-xl border transition-all ${
+            searchOpen || isFiltering
+              ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+              : 'bg-gray-100 text-gray-500 border-gray-200 hover:text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          {searchOpen
+            ? <X size={17} />
+            : (
+              <span className="relative">
+                <Search size={17} />
+                {isFiltering && (
+                  <span className="absolute -top-1.5 -right-1.5 w-2 h-2 bg-blue-400 rounded-full border border-white" />
+                )}
+              </span>
+            )
+          }
+        </button>
       </div>
 
-      <FilterBar filters={filters} onChange={setFilters} />
+      {/* Collapsible filter bar */}
+      <div
+        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+          searchOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+        }`}
+      >
+        <FilterBar filters={filters} onChange={setFilters} />
+      </div>
 
-      <p className="text-center text-xs text-gray-400 mb-1">
+      <p className="text-center text-xs text-gray-400 mb-1 mt-2">
         {filtered.length} event{filtered.length !== 1 ? 's' : ''} found
       </p>
 

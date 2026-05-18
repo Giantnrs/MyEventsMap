@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import { Category } from "@prisma/client"
 import { auth } from "@/lib/auth"
+import { checkEventSpam } from '@/lib/spamCheck'
 
 export async function getEvents() {
   try {
@@ -42,6 +43,20 @@ export async function createEvent(data: {
   const session = await auth()
   if (!session?.user?.id) redirect('/api/auth/signin')
 
+
+
+// inside createEvent(), before prisma.event.create:
+const spam = await checkEventSpam({
+  title: data.title,
+  description: data.description,
+  location: data.location,
+})
+
+if (spam.isSpam) {
+  throw new Error(`Event flagged: ${spam.reason ?? 'content policy violation'}`)
+}
+
+  
   await prisma.event.create({
     data: {
       title: data.title,

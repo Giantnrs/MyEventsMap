@@ -2,9 +2,10 @@
 
 import { updateEvent } from '@/app/events/action'
 import { Event } from '@prisma/client'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import LocationPicker from '@/components/LocationPicker'
 import ImageUploader from '@/components/ImageUploader'
+import AiDescriptionButton from '@/components/AiDescriptionButton'
 
 const CATEGORIES = [
   'OUTDOOR', 'MUSIC', 'SPORTS', 'FOOD', 'TECH', 'ARTS', 'CHARITY', 'OTHER',
@@ -18,6 +19,10 @@ export default function EditEventForm({ event }: { event: Event }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [imageUrl, setImageUrl] = useState(event?.imageUrl || '')
+
+  const titleRef = useRef<HTMLInputElement>(null)
+  const descriptionRef = useRef<HTMLTextAreaElement>(null)
+  const categoryRef = useRef<HTMLSelectElement>(null)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -42,8 +47,8 @@ export default function EditEventForm({ event }: { event: Event }) {
         imageUrl:    formData.get('imageUrl') as string || undefined,
       })
       setLoading(false)
-    } catch (err) {
-      setError('Something went wrong. Please try again.')
+    } catch (err: any) {
+      setError(err?.message ?? 'Something went wrong. Please try again.')
       setLoading(false)
     }
   }
@@ -60,6 +65,7 @@ export default function EditEventForm({ event }: { event: Event }) {
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
         <input
+          ref={titleRef}
           name="title"
           type="text"
           required
@@ -69,8 +75,21 @@ export default function EditEventForm({ event }: { event: Event }) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+        <div className="flex items-center justify-between mb-1">
+          <label className="block text-sm font-medium text-gray-700">Description</label>
+          <AiDescriptionButton
+            getFormValues={() => ({
+              title: titleRef.current?.value ?? '',
+              location: event.location,
+              category: categoryRef.current?.value ?? '',
+            })}
+            onResult={(text) => {
+              if (descriptionRef.current) descriptionRef.current.value = text
+            }}
+          />
+        </div>
         <textarea
+          ref={descriptionRef}
           name="description"
           required
           rows={4}
@@ -79,7 +98,6 @@ export default function EditEventForm({ event }: { event: Event }) {
         />
       </div>
 
-      {/* Location with autocomplete — pre-filled with existing values */}
       <LocationPicker
         defaultLocation={event.location}
         defaultLat={event.lat}
@@ -89,6 +107,7 @@ export default function EditEventForm({ event }: { event: Event }) {
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
         <select
+          ref={categoryRef}
           name="category"
           required
           defaultValue={event.category}
@@ -112,7 +131,9 @@ export default function EditEventForm({ event }: { event: Event }) {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">End Time <span className="text-gray-400">(optional)</span></label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            End Time <span className="text-gray-400">(optional)</span>
+          </label>
           <input
             name="endTime"
             type="datetime-local"
@@ -123,8 +144,7 @@ export default function EditEventForm({ event }: { event: Event }) {
       </div>
 
       <div>
-        
-<ImageUploader value={imageUrl} onChange={setImageUrl} />
+        <ImageUploader value={imageUrl} onChange={setImageUrl} />
       </div>
 
       <button

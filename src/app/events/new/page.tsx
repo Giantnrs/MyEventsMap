@@ -1,9 +1,10 @@
 'use client'
 
 import { createEvent } from "@/app/events/action"
-import { useState } from 'react'
+import { useState, useRef } from 'react'  // ← add useRef
 import LocationPicker from '@/components/LocationPicker'
 import ImageUploader from '@/components/ImageUploader'
+import AiDescriptionButton from '@/components/AiDescriptionButton'  // ← add this
 
 const CATEGORIES = [
   'OUTDOOR', 'MUSIC', 'SPORTS', 'FOOD', 'TECH', 'ARTS', 'CHARITY', 'OTHER',
@@ -13,6 +14,12 @@ export default function NewEventPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [imageUrl, setImageUrl] = useState('')
+
+  // ← add these three refs
+  const titleRef = useRef<HTMLInputElement>(null)
+  const descriptionRef = useRef<HTMLTextAreaElement>(null)
+  const categoryRef = useRef<HTMLSelectElement>(null)
+  const locationRef = useRef<HTMLInputElement>(null)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -35,15 +42,14 @@ export default function NewEventPage() {
                        ? new Date(formData.get('endTime') as string)
                        : undefined,
       })
-    } catch (err) {
-      setError('Something went wrong. Please try again.')
+    } catch (err: any) {
+      setError(err?.message ?? 'Something went wrong. Please try again.')
       setLoading(false)
     }
   }
 
   return (
     <main className="max-w-2xl mx-auto px-6 py-10">
-
       <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Event</h1>
       <p className="text-gray-500 mb-8">Fill in the details below to post your event.</p>
 
@@ -58,6 +64,7 @@ export default function NewEventPage() {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
           <input
+            ref={titleRef}  // ← add ref
             name="title"
             type="text"
             required
@@ -67,8 +74,22 @@ export default function NewEventPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+          {/* ← add this header row with the button */}
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-sm font-medium text-gray-700">Description</label>
+            <AiDescriptionButton
+              getFormValues={() => ({
+                title: titleRef.current?.value ?? '',
+                location: locationRef.current?.value ?? '',
+                category: categoryRef.current?.value ?? '',
+              })}
+              onResult={(text) => {
+                if (descriptionRef.current) descriptionRef.current.value = text
+              }}
+            />
+          </div>
           <textarea
+            ref={descriptionRef}  // ← add ref
             name="description"
             required
             rows={4}
@@ -77,12 +98,12 @@ export default function NewEventPage() {
           />
         </div>
 
-        {/* Location with autocomplete + auto coords */}
         <LocationPicker />
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
           <select
+            ref={categoryRef}  // ← add ref
             name="category"
             required
             className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
@@ -115,7 +136,7 @@ export default function NewEventPage() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Image URL <span className="text-gray-400">(optional)</span></label>
-<ImageUploader value={imageUrl} onChange={setImageUrl} />
+          <ImageUploader value={imageUrl} onChange={setImageUrl} />
         </div>
 
         <button

@@ -27,6 +27,16 @@ export async function getSavedEvents() {
   })
 }
 
+export async function getMyEvents() {
+  const session = await auth()
+  if (!session?.user?.id) redirect('/api/auth/signin')
+
+  return prisma.event.findMany({
+    where: { authorId: session.user.id },
+    orderBy: { startTime: 'asc' },
+  })
+}
+
 export async function toggleSave(eventId: string) {
   const session = await auth()
   if (!session?.user?.id) redirect('/api/auth/signin')
