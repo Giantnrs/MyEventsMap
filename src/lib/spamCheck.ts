@@ -3,6 +3,8 @@ export interface SpamResult {
   reason?: string
 }
 
+const referer = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+
 export async function checkEventSpam(data: {
   title: string
   description: string
@@ -13,11 +15,11 @@ export async function checkEventSpam(data: {
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-      'HTTP-Referer': process.env.NEXT_PUBLIC_BASE_URL ?? '',
+      'HTTP-Referer': referer,
       'X-Title': 'MyEventsMap',
     },
     body: JSON.stringify({
-      model: 'deepseek/deepseek-v3-0324:free',
+      model: 'deepseek/deepseek-v4-flash',
       max_tokens: 200,
       messages: [
         {

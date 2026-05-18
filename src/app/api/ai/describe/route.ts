@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
       'X-Title': 'MyEventsMap',
     },
     body: JSON.stringify({
-      model: 'deepseek/deepseek-v3-0324:free',
+      model: 'deepseek/deepseek-v4-flash',
       max_tokens: 300,
       messages: [
         {
