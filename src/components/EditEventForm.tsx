@@ -7,6 +7,7 @@ import LocationPicker from '@/components/LocationPicker'
 import ImageUploader from '@/components/ImageUploader'
 import AiDescriptionButton from '@/components/AiDescriptionButton'
 
+
 const CATEGORIES = [
   'OUTDOOR', 'MUSIC', 'SPORTS', 'FOOD', 'TECH', 'ARTS', 'CHARITY', 'OTHER',
 ]
@@ -48,6 +49,7 @@ export default function EditEventForm({ event }: { event: Event }) {
       })
       setLoading(false)
     } catch (err: any) {
+      if (err?.digest?.startsWith('NEXT_REDIRECT')) throw err
       setError(err?.message ?? 'Something went wrong. Please try again.')
       setLoading(false)
     }
@@ -82,6 +84,7 @@ export default function EditEventForm({ event }: { event: Event }) {
               title: titleRef.current?.value ?? '',
               location: event.location,
               category: categoryRef.current?.value ?? '',
+              description: descriptionRef.current?.value ?? '', 
             })}
             onResult={(text) => {
               if (descriptionRef.current) descriptionRef.current.value = text
@@ -144,7 +147,16 @@ export default function EditEventForm({ event }: { event: Event }) {
       </div>
 
       <div>
-        <ImageUploader value={imageUrl} onChange={setImageUrl} />
+        <ImageUploader
+  value={imageUrl}
+  onChange={setImageUrl}
+  getEventDetails={() => ({
+    title:       titleRef.current?.value       ?? event.title,
+    location:    event.location,
+    category:    categoryRef.current?.value    ?? event.category,
+    description: descriptionRef.current?.value ?? event.description,
+  })}
+/>
       </div>
 
       <button

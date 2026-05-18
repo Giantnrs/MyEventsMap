@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
-  const { title, location, category } = await req.json()
+  const { title, location, category, description } = await req.json()
+
+  const hasDraft = description && description.trim().length > 0
+
+  const userContent = hasDraft
+    ? `Event: "${title}" | Location: ${location || 'TBD'} | Category: ${category}\n\nThe organiser has already written this draft description:\n"${description.trim()}"\n\nImprove it — keep their intent and any specific details, but make it cleaner, friendlier, and more engaging.`
+    : `Event: "${title}" | Location: ${location || 'TBD'} | Category: ${category}`
 
   const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
@@ -17,11 +23,13 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role: 'system',
-          content: 'Write a concise, friendly 2–3 sentence event description for a community events app. Plain text only, no markdown.',
+          content: hasDraft
+            ? 'You are a friendly editor for a community events app. The user has written a draft description. Improve it: fix grammar, improve clarity and warmth, and keep all specific details the organiser mentioned. Return plain text only — no markdown, no bullet points, 2–3 sentences.'
+            : 'Write a concise, friendly 2–3 sentence event description for a community events app. Plain text only, no markdown.',
         },
         {
           role: 'user',
-          content: `Event: "${title}" | Location: ${location || 'TBD'} | Category: ${category}`,
+          content: userContent,
         },
       ],
     }),

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Sparkles, Loader2 } from 'lucide-react'
 
 interface Props {
-  getFormValues: () => { title: string; location: string; category: string }
+  getFormValues: () => { title: string; location: string; category: string; description?: string }
   onResult: (text: string) => void
 }
 
@@ -12,7 +12,7 @@ export default function AiDescriptionButton({ getFormValues, onResult }: Props) 
   const [loading, setLoading] = useState(false)
 
   async function generate() {
-    const { title, location, category } = getFormValues()
+    const { title, location, category, description } = getFormValues()
     if (!title) return
 
     setLoading(true)
@@ -20,7 +20,7 @@ export default function AiDescriptionButton({ getFormValues, onResult }: Props) 
       const res = await fetch('/api/ai/describe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, location, category }),
+        body: JSON.stringify({ title, location, category, description }),
       })
       const data = await res.json()
       if (data.text) onResult(data.text)

@@ -4,7 +4,8 @@ import { createEvent } from "@/app/events/action"
 import { useState, useRef } from 'react'  // ← add useRef
 import LocationPicker from '@/components/LocationPicker'
 import ImageUploader from '@/components/ImageUploader'
-import AiDescriptionButton from '@/components/AiDescriptionButton'  // ← add this
+import AiDescriptionButton from '@/components/AiDescriptionButton'
+
 
 const CATEGORIES = [
   'OUTDOOR', 'MUSIC', 'SPORTS', 'FOOD', 'TECH', 'ARTS', 'CHARITY', 'OTHER',
@@ -29,6 +30,7 @@ export default function NewEventPage() {
     const form = e.currentTarget
     const formData = new FormData(form)
 
+    
     try {
       await createEvent({
         title:       formData.get('title') as string,
@@ -43,6 +45,7 @@ export default function NewEventPage() {
                        : undefined,
       })
     } catch (err: any) {
+      if (err?.digest?.startsWith('NEXT_REDIRECT')) throw err
       setError(err?.message ?? 'Something went wrong. Please try again.')
       setLoading(false)
     }
@@ -77,16 +80,17 @@ export default function NewEventPage() {
           {/* ← add this header row with the button */}
           <div className="flex items-center justify-between mb-1">
             <label className="block text-sm font-medium text-gray-700">Description</label>
-            <AiDescriptionButton
-              getFormValues={() => ({
-                title: titleRef.current?.value ?? '',
-                location: locationRef.current?.value ?? '',
-                category: categoryRef.current?.value ?? '',
-              })}
-              onResult={(text) => {
-                if (descriptionRef.current) descriptionRef.current.value = text
-              }}
-            />
+<AiDescriptionButton
+  getFormValues={() => ({
+    title:       titleRef.current?.value ?? '',
+    location:    locationRef.current?.value ?? '',
+    category:    categoryRef.current?.value ?? '',
+    description: descriptionRef.current?.value ?? '',   // ← add this
+  })}
+  onResult={(text) => {
+    if (descriptionRef.current) descriptionRef.current.value = text
+  }}
+/>
           </div>
           <textarea
             ref={descriptionRef}  // ← add ref
@@ -136,7 +140,16 @@ export default function NewEventPage() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Image URL <span className="text-gray-400">(optional)</span></label>
-          <ImageUploader value={imageUrl} onChange={setImageUrl} />
+          <ImageUploader
+  value={imageUrl}
+  onChange={setImageUrl}
+  getEventDetails={() => ({
+    title:       titleRef.current?.value       ?? '',
+    location:    locationRef.current?.value    ?? '',
+    category:    categoryRef.current?.value    ?? '',
+    description: descriptionRef.current?.value ?? '',
+  })}
+/>
         </div>
 
         <button
