@@ -5,7 +5,7 @@ export const revalidate = 0
 
 export default async function Page() {
   const [events, savedIds] = await Promise.all([
-    prisma.event.findMany(),
+    prisma.event.findMany({ where: { flagged: false } }),
     getUserSavedIds(),
   ])
 

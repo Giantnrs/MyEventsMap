@@ -43,32 +43,30 @@ export async function createEvent(data: {
   const session = await auth()
   if (!session?.user?.id) redirect('/api/auth/signin')
 
+  // Block banned users
+  const user = await prisma.user.findUnique({ where: { id: session.user.id } })
+  if (user?.banned) throw new Error('Your account has been suspended.')
 
+  // Run spam check — auto-flag if suspicious, but don't block
+  const spam = await checkEventSpam({
+    title: data.title,
+    description: data.description,
+    location: data.location,
+  })
 
-// inside createEvent(), before prisma.event.create:
-const spam = await checkEventSpam({
-  title: data.title,
-  description: data.description,
-  location: data.location,
-})
-
-if (spam.isSpam) {
-  throw new Error(`Event flagged: ${spam.reason ?? 'content policy violation'}`)
-}
-
-  
   await prisma.event.create({
     data: {
-      title: data.title,
+      title:       data.title,
       description: data.description,
-      location: data.location,
-      lat: data.lat,
-      lng: data.lng,
-      category: data.category as Category,
-      startTime: data.startTime,
-      endTime: data.endTime,
-      imageUrl: data.imageUrl ?? "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80",
-      authorId: session.user.id,
+      location:    data.location,
+      lat:         data.lat,
+      lng:         data.lng,
+      category:    data.category as Category,
+      startTime:   data.startTime,
+      endTime:     data.endTime,
+      imageUrl:    data.imageUrl ?? "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80",
+      authorId:    session.user.id,
+      flagged:     spam.isSpam,
     }
   })
 
@@ -94,18 +92,26 @@ export async function updateEvent(id: string, data: {
   if (!event) throw new Error('Event not found')
   if (event.authorId !== session.user.id) throw new Error('Unauthorized')
 
+  // Re-run spam check on every edit
+  const spam = await checkEventSpam({
+    title: data.title,
+    description: data.description,
+    location: data.location,
+  })
+
   await prisma.event.update({
     where: { id },
     data: {
-      title: data.title,
+      title:       data.title,
       description: data.description,
-      location: data.location,
-      lat: data.lat,
-      lng: data.lng,
-      category: data.category as Category,
-      startTime: data.startTime,
-      endTime: data.endTime,
-      imageUrl: data.imageUrl,
+      location:    data.location,
+      lat:         data.lat,
+      lng:         data.lng,
+      category:    data.category as Category,
+      startTime:   data.startTime,
+      endTime:     data.endTime,
+      imageUrl:    data.imageUrl,
+      flagged:     spam.isSpam,
     }
   })
 
