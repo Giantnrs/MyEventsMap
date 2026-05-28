@@ -4,7 +4,12 @@ import { deleteEvent } from '@/app/events/action'
 import { getEventDonations } from '@/app/events/donate/actions'
 import { auth } from '@/lib/auth'
 import Link from 'next/link'
+import { Category } from '@prisma/client'
+import { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, Zap, CloudFog } from 'lucide-react'
 import DonatePanel from '@/components/DonatePanel'
+import { fetchWeather, weatherInfo } from '@/lib/weather'
+
+const WEATHER_ICONS = { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, Zap, CloudFog }
 
 export default async function EventDetailPage({
   params,
@@ -25,6 +30,10 @@ export default async function EventDetailPage({
   if (!event) {
     notFound()
   }
+
+  const weather = await fetchWeather(event.lat, event.lng, event.startTime)
+  const weatherDisplay = weather ? weatherInfo(weather.weatherCode) : null
+  const WeatherIcon = weatherDisplay ? WEATHER_ICONS[weatherDisplay.icon] : null
 
   const isOwner = session?.user?.id === event.authorId
 
@@ -87,6 +96,22 @@ export default async function EventDetailPage({
         )}
       </div>
 
+      {/* Weather forecast */}
+      {weather && weatherDisplay && WeatherIcon && (
+        <div className="mt-4 flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+          <WeatherIcon size={22} className="shrink-0 text-blue-500" />
+          <div>
+            <p className="text-xs font-medium text-gray-400 uppercase tracking-wide leading-none mb-1">
+              Weather forecast
+            </p>
+            <p className="text-sm text-gray-700">
+              {weatherDisplay.label} · {weather.tempMin}–{weather.tempMax}°C
+              {weather.precipitation > 0 && ` · ${weather.precipitation}mm rain`}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Divider */}
       <hr className="my-6 border-gray-200" />
 
@@ -95,12 +120,14 @@ export default async function EventDetailPage({
         {event.description}
       </p>
 
-      {/* Donation panel — visible to everyone */}
-      <DonatePanel
-        eventId={id}
-        raised={total}
-        count={count}
-      />
+      {/* Donation panel — charity events only */}
+      {event.category === Category.CHARITY && (
+        <DonatePanel
+          eventId={id}
+          raised={total}
+          count={count}
+        />
+      )}
 
       {/* Actions — only visible to owner */}
       {isOwner && (

@@ -274,7 +274,7 @@ export default function EventMap({
       marker.on("click", () => router.push(`/events/${event.id}`))
       marker.on("mouseover", () => {
         const el = marker.getElement()
-        if (el) el.style.cursor = "pointer"
+        if (el) (el as HTMLElement).style.cursor = "pointer"
       })
 
       clusterGroup.addLayer(marker)
