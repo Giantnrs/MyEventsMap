@@ -8,7 +8,7 @@ import dynamic from "next/dynamic"
 
 const EventMap = dynamic(() => import("@/components/EventMap"), {
   ssr: false,
-  loading: () => <p className="p-6 text-gray-500">Loading map...</p>,
+  loading: () => <div className="w-full animate-pulse bg-gray-100" style={{ height: "calc(100vh - 64px)" }} />,
 })
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {

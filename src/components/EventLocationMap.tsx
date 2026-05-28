@@ -3,12 +3,6 @@
 import { useEffect, useRef } from 'react'
 import L from 'leaflet'
 
-const icon = L.icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-})
 
 export default function EventLocationMap({
   lat,
@@ -31,13 +25,18 @@ export default function EventLocationMap({
     })
     mapRef.current = map
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>',
+      subdomains: "abcd",
+      maxZoom: 20,
     }).addTo(map)
 
     map.setView([lat, lng], 15)
 
-    L.marker([lat, lng], { icon })
+    L.circleMarker([lat, lng], {
+      radius: 8, color: "#ffffff", weight: 2.5,
+      fillColor: "#2563eb", fillOpacity: 1,
+    })
       .addTo(map)
       .bindPopup(label)
       .openPopup()

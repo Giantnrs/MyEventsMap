@@ -5,12 +5,8 @@ import { useRouter } from "next/navigation"
 import L from "leaflet"
 import "leaflet.markercluster"
 
-const defaultIcon = L.icon({
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-})
+const PIN_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>`
+const CLOCK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`
 
 /** Build the cluster popup as real DOM nodes — avoids HTML sanitization stripping <a> tags */
 function buildClusterPopupEl(
@@ -40,7 +36,7 @@ function buildClusterPopupEl(
     const item = document.createElement("a")
     item.href = `/events/${e.id}`
     item.style.cssText =
-      "display:flex;flex-direction:column;gap:2px;padding:10px 12px;" +
+      "display:flex;flex-direction:row;align-items:center;gap:10px;padding:8px 12px;" +
       "border-bottom:1px solid #f3f4f6;text-decoration:none;color:inherit;" +
       "transition:background 0.12s;cursor:pointer;"
     item.addEventListener("mouseenter", () => { item.style.background = "#eff6ff" })
@@ -50,21 +46,47 @@ function buildClusterPopupEl(
       onNavigate(`/events/${e.id}`)
     })
 
+    // Thumbnail
+    const thumb = document.createElement("div")
+    thumb.style.cssText =
+      "width:44px;height:44px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#e5e7eb;"
+    if (e.imageUrl) {
+      const img = document.createElement("img")
+      img.src = e.imageUrl
+      img.alt = ""
+      img.style.cssText = "width:100%;height:100%;object-fit:cover;"
+      thumb.appendChild(img)
+    }
+    item.appendChild(thumb)
+
+    // Text column
+    const col = document.createElement("div")
+    col.style.cssText = "display:flex;flex-direction:column;gap:2px;min-width:0;"
+
     const title = document.createElement("span")
-    title.style.cssText = "font-weight:600;font-size:13px;color:#111;line-height:1.3;"
+    title.style.cssText =
+      "font-weight:600;font-size:13px;color:#111;line-height:1.3;" +
+      "white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
     title.textContent = e.title
 
     const loc = document.createElement("span")
-    loc.style.cssText = "font-size:11px;color:#6b7280;"
-    loc.textContent = `📍 ${e.location}`
+    loc.style.cssText = "display:flex;align-items:center;gap:3px;font-size:11px;color:#6b7280;"
+    const locIcon = document.createElement("span")
+    locIcon.innerHTML = PIN_SVG
+    loc.appendChild(locIcon)
+    loc.appendChild(document.createTextNode(e.location))
 
     const time = document.createElement("span")
-    time.style.cssText = "font-size:11px;color:#6b7280;"
-    time.textContent = `🕐 ${label}`
+    time.style.cssText = "display:flex;align-items:center;gap:3px;font-size:11px;color:#6b7280;"
+    const timeIcon = document.createElement("span")
+    timeIcon.innerHTML = CLOCK_SVG
+    time.appendChild(timeIcon)
+    time.appendChild(document.createTextNode(label))
 
-    item.appendChild(title)
-    item.appendChild(loc)
-    item.appendChild(time)
+    col.appendChild(title)
+    col.appendChild(loc)
+    col.appendChild(time)
+    item.appendChild(col)
     list.appendChild(item)
   })
 
@@ -136,7 +158,7 @@ export default function EventMap({
               userMarker = L.circleMarker([latitude, longitude], {
                 radius: 8, color: "#ffffff", weight: 2,
                 fillColor: "#3b82f6", fillOpacity: 1,
-              }).addTo(map).bindPopup("📍 You are here").openPopup()
+              }).addTo(map).bindPopup("You are here").openPopup()
               map.flyTo([latitude, longitude], 15, { animate: true, duration: 1.2 })
               btn.style.color = "#2563eb"; btn.style.opacity = "1"
             },
@@ -229,19 +251,22 @@ export default function EventMap({
         hour: "2-digit", minute: "2-digit",
       })
 
-      const marker = L.marker([event.lat, event.lng], { icon: defaultIcon })
+      const marker = L.circleMarker([event.lat, event.lng], {
+        radius: 8, color: "#ffffff", weight: 2.5,
+        fillColor: "#2563eb", fillOpacity: 1,
+      })
         .bindTooltip(
           L.tooltip({
             permanent: false, direction: "top",
-            offset: [0, -42], opacity: 1,
+            offset: [0, -12], opacity: 1,
             className: "event-map-tooltip",
           }).setContent(`
             <div style="width:200px;box-sizing:border-box;">
               <p style="font-weight:600;font-size:13px;margin:0 0 4px;color:#111;
                 white-space:normal;word-break:break-word;line-height:1.3;">${event.title}</p>
-              <p style="font-size:11px;margin:0 0 2px;color:#555;
-                white-space:normal;word-break:break-word;">📍 ${event.location}</p>
-              <p style="font-size:11px;margin:0;color:#555;">🕐 ${startLabel}</p>
+              <p style="font-size:11px;margin:0 0 2px;color:#555;display:flex;align-items:center;gap:3px;
+                white-space:normal;word-break:break-word;">${PIN_SVG} ${event.location}</p>
+              <p style="font-size:11px;margin:0;color:#555;display:flex;align-items:center;gap:3px;">${CLOCK_SVG} ${startLabel}</p>
             </div>`)
         )
 
