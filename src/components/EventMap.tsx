@@ -8,6 +8,33 @@ import "leaflet.markercluster"
 const PIN_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>`
 const CLOCK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`
 
+const CATEGORY_EMOJI: Record<string, string> = {
+  OUTDOOR: "🏔️",
+  MUSIC:   "🎵",
+  SPORTS:  "⚽",
+  FOOD:    "🍽️",
+  TECH:    "💻",
+  ARTS:    "🎨",
+  CHARITY: "❤️",
+  OTHER:   "📌",
+}
+
+function categoryIcon(category: string): L.DivIcon {
+  const emoji = CATEGORY_EMOJI[category] ?? "📌"
+  return L.divIcon({
+    html: `<div style="
+      width:34px;height:34px;background:white;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      font-size:16px;line-height:1;
+      box-shadow:0 2px 6px rgba(0,0,0,0.25);
+      border:2px solid white;cursor:pointer;">${emoji}</div>`,
+    className: "",
+    iconSize:   [34, 34],
+    iconAnchor: [17, 17],
+    tooltipAnchor: [0, -20],
+  })
+}
+
 /** Build the cluster popup as real DOM nodes — avoids HTML sanitization stripping <a> tags */
 function buildClusterPopupEl(
   events: Event[],
@@ -251,14 +278,11 @@ export default function EventMap({
         hour: "2-digit", minute: "2-digit",
       })
 
-      const marker = L.circleMarker([event.lat, event.lng], {
-        radius: 8, color: "#ffffff", weight: 2.5,
-        fillColor: "#2563eb", fillOpacity: 1,
-      })
+      const marker = L.marker([event.lat, event.lng], { icon: categoryIcon(event.category) })
         .bindTooltip(
           L.tooltip({
             permanent: false, direction: "top",
-            offset: [0, -12], opacity: 1,
+            offset: [0, -4], opacity: 1,
             className: "event-map-tooltip",
           }).setContent(`
             <div style="width:200px;box-sizing:border-box;">
@@ -274,7 +298,7 @@ export default function EventMap({
       marker.on("click", () => router.push(`/events/${event.id}`))
       marker.on("mouseover", () => {
         const el = marker.getElement()
-        if (el) (el as HTMLElement).style.cursor = "pointer"
+        if (el) el.style.cursor = "pointer"
       })
 
       clusterGroup.addLayer(marker)
