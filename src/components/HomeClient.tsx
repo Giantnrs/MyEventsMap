@@ -5,6 +5,7 @@ import { createPortal } from "react-dom"
 import { useRouter, useSearchParams } from "next/navigation"
 import { List, Map as MapIcon, Search, X } from "lucide-react"
 import EventList from "@/components/EventList"
+import type { WeatherData } from "@/lib/weather"
 import FilterBar, { Filters, DEFAULT_FILTERS } from "@/components/FilterBar"
 import dynamic from "next/dynamic"
 
@@ -28,9 +29,11 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): nu
 export default function HomeClient({
   events,
   savedIds,
+  weatherMap = {},
 }: {
   events: Event[]
   savedIds: string[]
+  weatherMap?: Record<string, WeatherData | null>
 }) {
   const router       = useRouter()
   const searchParams = useSearchParams()
@@ -39,7 +42,16 @@ export default function HomeClient({
   const [view, setView] = useState<"list" | "map">(
     () => (searchParams.get("view") === "list" ? "list" : "map")
   )
-  const [filters, setFilters]       = useState<Filters>(DEFAULT_FILTERS)
+
+  // Read saved map position from URL params
+  const initialMapView = (() => {
+    const lat  = parseFloat(searchParams.get("mlat") ?? "")
+    const lng  = parseFloat(searchParams.get("mlng") ?? "")
+    const zoom = parseInt(searchParams.get("mzoom") ?? "")
+    return !isNaN(lat) && !isNaN(lng) ? { lat, lng, zoom: isNaN(zoom) ? 12 : zoom } : undefined
+  })()
+
+const [filters, setFilters]       = useState<Filters>(DEFAULT_FILTERS)
   const [searchOpen, setSearchOpen] = useState(false)
   const [navSlot, setNavSlot]       = useState<Element | null>(null)
 
@@ -176,9 +188,13 @@ export default function HomeClient({
 
 
       {view === "list" ? (
-        <EventList events={filtered} savedIds={savedIds} />
+        <EventList events={filtered} savedIds={savedIds} weatherMap={weatherMap} />
       ) : (
-        <EventMap events={filtered} flyTo={flyTo} />
+        <EventMap
+          events={filtered}
+          flyTo={flyTo}
+          initialView={initialMapView}
+        />
       )}
     </main>
   )

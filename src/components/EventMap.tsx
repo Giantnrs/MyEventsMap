@@ -151,9 +151,11 @@ function buildClusterPopupEl(
 export default function EventMap({
   events,
   flyTo,
+  initialView,
 }: {
   events: Event[]
   flyTo: { lat: number; lng: number } | null
+  initialView?: { lat: number; lng: number; zoom: number }
 }) {
   // ── Refs ──────────────────────────────────────────────────────────────────
 
@@ -249,7 +251,12 @@ export default function EventMap({
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return
 
-    const map = L.map(mapRef.current).setView([-37.787, 175.279], 12)
+    const initCenter: L.LatLngExpression = initialView
+      ? [initialView.lat, initialView.lng]
+      : [-37.787, 175.279]
+    const initZoom = initialView?.zoom ?? 12
+
+    const map = L.map(mapRef.current).setView(initCenter, initZoom)
     mapInstanceRef.current = map
 
     // Carto Voyager tile layer — clean, modern basemap, no API key needed
@@ -263,7 +270,6 @@ export default function EventMap({
       }
     ).addTo(map)
 
-    // Update sidebar whenever the viewport changes
     map.on("moveend", updateVisibleEvents)
     map.on("zoomend", updateVisibleEvents)
 
@@ -350,6 +356,17 @@ export default function EventMap({
 
   // ── Rebuild markers whenever the filtered event list changes ──────────────
 
+  // Snapshot current map position into the URL before navigating away.
+  // Uses replaceState (synchronous) so router.push sees the updated URL in history.
+  function saveMapPosition(map: L.Map) {
+    const c = map.getCenter()
+    const params = new URLSearchParams(window.location.search)
+    params.set("mlat",  c.lat.toFixed(5))
+    params.set("mlng",  c.lng.toFixed(5))
+    params.set("mzoom", String(map.getZoom()))
+    window.history.replaceState(null, "", `?${params.toString()}`)
+  }
+
   useEffect(() => {
     const map = mapInstanceRef.current
     if (!map) return
@@ -402,6 +419,7 @@ export default function EventMap({
 
       const content = buildClusterPopupEl(clusterEvents, (href) => {
         map.closePopup()
+        saveMapPosition(map)
         router.push(href)
       })
 
@@ -441,7 +459,7 @@ export default function EventMap({
       // Store event data so the cluster popup can access it
       ;(marker as any).options.eventData = event
 
-      marker.on("click", () => router.push(`/events/${event.id}`))
+      marker.on("click", () => { saveMapPosition(map); router.push(`/events/${event.id}`) })
 
       // On marker hover: highlight sidebar card and scroll it into view
       marker.on("mouseover", () => {
@@ -462,15 +480,15 @@ export default function EventMap({
     map.addLayer(clusterGroup)
     clusterGroupRef.current = clusterGroup
 
-    // Fit bounds or fall back to update immediately in flyTo mode
-    if (!flyTo) {
+    // Fit bounds only on first load with no saved position
+    if (!flyTo && !initialView) {
       const bounds = clusterGroup.getBounds()
       if (bounds.isValid()) {
         // fitBounds triggers 'moveend', which calls updateVisibleEvents
         map.fitBounds(bounds, { padding: [48, 48], maxZoom: 14 })
       }
     } else {
-      // flyTo has already positioned the map; update sidebar now
+      // Saved position or flyTo already set — just update the sidebar
       setTimeout(updateVisibleEvents, 300)
     }
   }, [events, router]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -585,7 +603,7 @@ export default function EventMap({
                       if (el) itemRefsMap.current.set(event.id, el)
                       else    itemRefsMap.current.delete(event.id)
                     }}
-                    onClick={() => router.push(`/events/${event.id}`)}
+                    onClick={() => { const m = mapInstanceRef.current; if (m) saveMapPosition(m); router.push(`/events/${event.id}`) }}
                     onMouseEnter={() => handleCardEnter(event)}
                     onMouseLeave={() => handleCardLeave(event)}
                     style={{
