@@ -1,6 +1,7 @@
 "use client"
 import { Event } from "@prisma/client"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { List, Map as MapIcon, Search, X } from "lucide-react"
 import EventList from "@/components/EventList"
 import FilterBar, { Filters, DEFAULT_FILTERS } from "@/components/FilterBar"
@@ -30,9 +31,22 @@ export default function HomeClient({
   events: Event[]
   savedIds: string[]
 }) {
-  const [view, setView]           = useState<"list" | "map">("list")
+  const router       = useRouter()
+  const searchParams = useSearchParams()
+
+  // Read view from URL on first render; default to "map"
+  const [view, setView] = useState<"list" | "map">(
+    () => (searchParams.get("view") === "list" ? "list" : "map")
+  )
   const [filters, setFilters]     = useState<Filters>(DEFAULT_FILTERS)
   const [searchOpen, setSearchOpen] = useState(false)
+
+  // Keep ?view= in sync so router.back() restores the correct view
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    params.set("view", view)
+    router.replace(`?${params.toString()}`, { scroll: false })
+  }, [view]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const isFiltering =
     filters.search ||

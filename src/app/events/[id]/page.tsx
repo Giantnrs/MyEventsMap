@@ -8,6 +8,7 @@ import { Category } from '@prisma/client'
 import { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, Zap, CloudFog } from 'lucide-react'
 import DonatePanel from '@/components/DonatePanel'
 import EventLocationMap from '@/components/EventLocationMapClient'
+import BackButton from '@/components/BackButton'
 import { fetchWeather, weatherInfo } from '@/lib/weather'
 
 const WEATHER_ICONS = { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, Zap, CloudFog }
@@ -40,6 +41,8 @@ export default async function EventDetailPage({
 
   return (
     <main className="max-w-3xl mx-auto px-6 py-10">
+
+      <BackButton />
 
       {/* Success banner */}
       {donated === '1' && (
