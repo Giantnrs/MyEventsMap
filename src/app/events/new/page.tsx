@@ -43,6 +43,7 @@ export default function NewEventPage() {
         endTime:     formData.get('endTime')
                        ? new Date(formData.get('endTime') as string)
                        : undefined,
+        imageUrl:    imageUrl || undefined,
       })
     } catch (err: any) {
       if (err?.digest?.startsWith('NEXT_REDIRECT')) throw err

@@ -54,7 +54,7 @@ export async function createEvent(data: {
     location: data.location,
   })
 
-  await prisma.event.create({
+  const event = await prisma.event.create({
     data: {
       title:       data.title,
       description: data.description,
@@ -71,7 +71,7 @@ export async function createEvent(data: {
   })
 
   revalidatePath("/")
-  redirect("/")
+  redirect(`/events/${event.id}`)
 }
 
 export async function updateEvent(id: string, data: {
