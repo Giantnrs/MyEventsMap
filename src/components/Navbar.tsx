@@ -3,15 +3,17 @@
 import { Plus, LogIn, LogOut } from 'lucide-react'
 import Link from 'next/link'
 import { useSession, signIn, signOut } from 'next-auth/react'
+import { usePathname } from 'next/navigation'
 
 export default function Navbar() {
   const { data: session } = useSession()
+  const isHome = usePathname() === '/'
 
   return (
     <nav className="fixed top-0 w-full bg-white border-b border-gray-200 z-50 h-16 flex items-center px-6 justify-between shadow-sm">
 
       {/* Logo */}
-      <Link href="/" className="flex items-center gap-2">
+      <Link href="/" className="flex items-center gap-2 shrink-0">
         <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
           <span className="text-white font-bold text-xl">E</span>
         </div>
@@ -19,6 +21,11 @@ export default function Navbar() {
           MyEventsMap
         </span>
       </Link>
+
+      {/* Center slot — HomeClient portals the List/Map toggle here on home page */}
+      {isHome && (
+        <div id="navbar-center-slot" className="absolute left-1/2 -translate-x-1/2 flex items-center" />
+      )}
 
       {/* Right side */}
       <div className="flex items-center gap-3">
@@ -33,8 +40,6 @@ export default function Navbar() {
 
         {session ? (
           <div className="flex items-center gap-3">
-
-            {/* Avatar — links to saved page */}
             <Link href="/saved" title="Saved events">
               {session.user?.image ? (
                 <img

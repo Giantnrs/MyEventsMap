@@ -1,6 +1,7 @@
 "use client"
 import { Event } from "@prisma/client"
 import { useState, useMemo, useEffect } from "react"
+import { createPortal } from "react-dom"
 import { useRouter, useSearchParams } from "next/navigation"
 import { List, Map as MapIcon, Search, X } from "lucide-react"
 import EventList from "@/components/EventList"
@@ -38,8 +39,9 @@ export default function HomeClient({
   const [view, setView] = useState<"list" | "map">(
     () => (searchParams.get("view") === "list" ? "list" : "map")
   )
-  const [filters, setFilters]     = useState<Filters>(DEFAULT_FILTERS)
+  const [filters, setFilters]       = useState<Filters>(DEFAULT_FILTERS)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [navSlot, setNavSlot]       = useState<Element | null>(null)
 
   // Keep ?view= in sync so router.back() restores the correct view
   useEffect(() => {
@@ -47,6 +49,11 @@ export default function HomeClient({
     params.set("view", view)
     router.replace(`?${params.toString()}`, { scroll: false })
   }, [view]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Locate the navbar center slot once mounted
+  useEffect(() => {
+    setNavSlot(document.getElementById("navbar-center-slot"))
+  }, [])
 
   const isFiltering =
     filters.search ||
@@ -65,7 +72,7 @@ export default function HomeClient({
     const now    = new Date()
     const search = filters.search.toLowerCase()
 
-    return events.filter(event => {
+    const result = events.filter(event => {
       if (search && !event.title.toLowerCase().includes(search) && !event.location.toLowerCase().includes(search))
         return false
       if (filters.category && event.category !== filters.category) return false
@@ -83,6 +90,15 @@ export default function HomeClient({
       ) return false
       return true
     })
+
+    // When "Near me" is active, sort by distance ascending
+    if (filters.nearLat !== null && filters.nearLng !== null) {
+      result.sort((a, b) =>
+        haversineKm(filters.nearLat!, filters.nearLng!, a.lat, a.lng) -
+        haversineKm(filters.nearLat!, filters.nearLng!, b.lat, b.lng)
+      )
+    }
+    return result
   }, [events, filters])
 
   // Memoized so EventMap's flyTo effect only fires when coords actually change,
@@ -94,52 +110,60 @@ export default function HomeClient({
     [filters.nearLat, filters.nearLng]
   )
 
-  return (
-    <main>
-      {/* View toggle + search button */}
-      <div className="flex justify-center items-center gap-2 pt-6">
-        <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200">
-          <button
-            onClick={() => setView("list")}
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
-              view === "list" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            <List size={18} />
-            <span>List</span>
-          </button>
-          <button
-            onClick={() => setView("map")}
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
-              view === "map" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            <MapIcon size={18} />
-            <span>Map</span>
-          </button>
-        </div>
-
+  const toggleControls = (
+    <div className="flex items-center gap-2">
+      <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200">
         <button
-          onClick={handleToggleSearch}
-          title={searchOpen ? "Close search" : "Search & filter"}
-          className={`flex items-center justify-center w-9 h-9 rounded-xl border transition-all ${
-            searchOpen || isFiltering
-              ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-              : "bg-gray-100 text-gray-500 border-gray-200 hover:text-gray-700 hover:bg-gray-200"
+          onClick={() => setView("list")}
+          className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
+            view === "list" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
           }`}
         >
-          {searchOpen ? (
-            <X size={17} />
-          ) : (
-            <span className="relative">
-              <Search size={17} />
-              {isFiltering && (
-                <span className="absolute -top-1.5 -right-1.5 w-2 h-2 bg-blue-400 rounded-full border border-white" />
-              )}
-            </span>
-          )}
+          <List size={18} />
+          <span>List</span>
+        </button>
+        <button
+          onClick={() => setView("map")}
+          className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
+            view === "map" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          <MapIcon size={18} />
+          <span>Map</span>
         </button>
       </div>
+
+      <button
+        onClick={handleToggleSearch}
+        title={searchOpen ? "Close search" : "Search & filter"}
+        className={`flex items-center justify-center w-9 h-9 rounded-xl border transition-all ${
+          searchOpen || isFiltering
+            ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+            : "bg-gray-100 text-gray-500 border-gray-200 hover:text-gray-700 hover:bg-gray-200"
+        }`}
+      >
+        {searchOpen ? (
+          <X size={17} />
+        ) : (
+          <span className="relative">
+            <Search size={17} />
+            {isFiltering && (
+              <span className="absolute -top-1.5 -right-1.5 w-2 h-2 bg-blue-400 rounded-full border border-white" />
+            )}
+          </span>
+        )}
+      </button>
+
+      <span className="text-xs text-gray-400 whitespace-nowrap">
+        {filtered.length} event{filtered.length !== 1 ? "s" : ""}
+      </span>
+    </div>
+  )
+
+  return (
+    <main>
+      {/* Portal the toggle into the navbar center slot */}
+      {navSlot && createPortal(toggleControls, navSlot)}
 
       {/* Collapsible filter bar */}
       <div
@@ -150,9 +174,6 @@ export default function HomeClient({
         <FilterBar filters={filters} onChange={setFilters} />
       </div>
 
-      <p className="text-center text-xs text-gray-400 mb-1 mt-2">
-        {filtered.length} event{filtered.length !== 1 ? "s" : ""} found
-      </p>
 
       {view === "list" ? (
         <EventList events={filtered} savedIds={savedIds} />
