@@ -1,10 +1,18 @@
 'use client'
 
-import { useState } from 'react'
-import { X, LocateFixed, Loader2, MapPin } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
+import { X, LocateFixed, Loader2, MapPin, ChevronDown } from 'lucide-react'
 
 const CATEGORIES = [
-  'OUTDOOR', 'MUSIC', 'SPORTS', 'FOOD', 'TECH', 'ARTS', 'CHARITY', 'OTHER',
+  { value: 'OUTDOOR', label: '🌲 Outdoor' },
+  { value: 'MUSIC',   label: '🎵 Music' },
+  { value: 'SPORTS',  label: '⚽ Sports' },
+  { value: 'FOOD',    label: '🍽️ Food' },
+  { value: 'TECH',    label: '💻 Tech' },
+  { value: 'ARTS',    label: '🎨 Arts' },
+  { value: 'CHARITY', label: '❤️ Charity' },
+  { value: 'OTHER',   label: '📌 Other' },
 ]
 
 const RADIUS_OPTIONS = [
@@ -40,6 +48,91 @@ export const DEFAULT_FILTERS: Filters = {
 interface Props {
   filters: Filters
   onChange: (filters: Filters) => void
+}
+
+function CategoryDropdown({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const [rect, setRect] = useState<DOMRect | null>(null)
+  const btnRef  = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  // Close on outside click
+  useEffect(() => {
+    function handle(e: MouseEvent) {
+      if (
+        menuRef.current && !menuRef.current.contains(e.target as Node) &&
+        btnRef.current  && !btnRef.current.contains(e.target as Node)
+      ) setOpen(false)
+    }
+    document.addEventListener('mousedown', handle)
+    return () => document.removeEventListener('mousedown', handle)
+  }, [])
+
+  function toggle() {
+    if (!open && btnRef.current) setRect(btnRef.current.getBoundingClientRect())
+    setOpen(o => !o)
+  }
+
+  const selected = CATEGORIES.find(c => c.value === value)
+
+  const menu = open && rect ? createPortal(
+    <div
+      ref={menuRef}
+      style={{
+        position: 'fixed',
+        top:      rect.bottom + 6,
+        left:     rect.left,
+        width:    176,
+        zIndex:   9999,
+      }}
+      className="bg-white border border-gray-200 rounded-xl shadow-lg py-1 overflow-hidden"
+    >
+      <button
+        type="button"
+        onClick={() => { onChange(''); setOpen(false) }}
+        className={`w-full text-left px-3 py-2 text-sm transition-colors ${
+          !value ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-50'
+        }`}
+      >
+        All categories
+      </button>
+      {CATEGORIES.map(cat => (
+        <button
+          key={cat.value}
+          type="button"
+          onClick={() => { onChange(cat.value); setOpen(false) }}
+          className={`w-full text-left px-3 py-2 text-sm transition-colors ${
+            value === cat.value ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-50'
+          }`}
+        >
+          {cat.label}
+        </button>
+      ))}
+    </div>,
+    document.body
+  ) : null
+
+  return (
+    <div className="relative">
+      <button
+        ref={btnRef}
+        type="button"
+        onClick={toggle}
+        className={`flex items-center gap-2 border rounded-lg pl-3 pr-2.5 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+          value
+            ? 'border-blue-500 bg-blue-50 text-blue-700'
+            : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50'
+        }`}
+      >
+        <span>{selected ? selected.label : 'All categories'}</span>
+        <ChevronDown
+          size={14}
+          className={`transition-transform duration-150 ${open ? 'rotate-180' : ''} ${value ? 'text-blue-400' : 'text-gray-400'}`}
+        />
+      </button>
+      {menu}
+    </div>
+  )
 }
 
 export default function FilterBar({ filters, onChange }: Props) {
@@ -102,19 +195,14 @@ export default function FilterBar({ filters, onChange }: Props) {
         )}
       </div>
 
-      {/* Row 2 — category, dates, upcoming, near me */}
+      {/* Row 2 — category + dates + upcoming + near me */}
       <div className="flex flex-wrap gap-2 items-center">
 
-        <select
+        {/* Category selector — custom dropdown */}
+        <CategoryDropdown
           value={filters.category}
-          onChange={e => set({ category: e.target.value })}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">All categories</option>
-          {CATEGORIES.map(cat => (
-            <option key={cat} value={cat}>{cat}</option>
-          ))}
-        </select>
+          onChange={v => set({ category: v })}
+        />
 
         <div className="flex items-center gap-1.5">
           <label className="text-xs text-gray-500 whitespace-nowrap">From</label>
