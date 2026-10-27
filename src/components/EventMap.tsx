@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import L from "leaflet"
 import "leaflet.markercluster"
+import { getMapTileConfig } from "@/lib/mapTiles"
 
 // ── Inline SVG icons used inside Leaflet tooltip strings ─────────────────────
 // (Cannot use React components here — Leaflet templates are raw HTML strings)
@@ -259,16 +260,8 @@ export default function EventMap({
     const map = L.map(mapRef.current).setView(initCenter, initZoom)
     mapInstanceRef.current = map
 
-    // Carto Voyager tile layer — clean, modern basemap, no API key needed
-    L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-      {
-        attribution:
-          '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>',
-        subdomains: "abcd",
-        maxZoom: 20,
-      }
-    ).addTo(map)
+    const tiles = getMapTileConfig()
+    L.tileLayer(tiles.url, tiles.options).addTo(map)
 
     map.on("moveend", updateVisibleEvents)
     map.on("zoomend", updateVisibleEvents)

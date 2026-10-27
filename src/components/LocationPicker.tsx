@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { Loader2, MapPin } from 'lucide-react'
+import { getMapTileConfig } from '@/lib/mapTiles'
 
 interface Suggestion {
   id: string
@@ -66,14 +67,8 @@ export default function LocationPicker({ defaultLocation = '', defaultLat, defau
         scrollWheelZoom: true,
       })
 
-      L.tileLayer(
-        'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-        {
-          attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>',
-          subdomains: 'abcd',
-          maxZoom: 20,
-        }
-      ).addTo(map)
+      const tiles = getMapTileConfig()
+      L.tileLayer(tiles.url, tiles.options).addTo(map)
 
       // If editing with existing coords, show the pin immediately
       if (defaultLat != null && defaultLng != null) {
